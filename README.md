@@ -1,2 +1,4 @@
-# protocolr2-bot
-Bot de Telegram con sistema de avance diario del Protocolo R2
+# ProtocolR2 Bot
+
+Backend en FastAPI para el coach digital del Protocolo R2.  
+Incluye sistema de días, repeticiones, logros y progreso gamificado.
