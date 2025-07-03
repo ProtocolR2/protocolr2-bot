@@ -1,8 +1,16 @@
 services:
   - type: web
-    name: protocolr2-bot
+    name: protocolr2-backend
+    rootDir: backend
     env: python
-    plan: free
     buildCommand: ""
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    autoDeploy: true
+
+  - type: web
+    name: protocolr2-bot
+    rootDir: telegram-bot
+    env: python
+    buildCommand: ""
+    startCommand: python bot.py
     autoDeploy: true
