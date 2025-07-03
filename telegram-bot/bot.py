@@ -1,86 +1,37 @@
-import logging
-import requests
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram import Update
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
-TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"
-BACKEND_URL = "https://protocolr2-backend.onrender.com"
+# --- Servidor dummy para que Render detecte puerto abierto ---
+class DummyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"OK")
 
-logging.basicConfig(level=logging.INFO)
+def run_dummy_server():
+    server = HTTPServer(('0.0.0.0', 10000), DummyHandler)
+    server.serve_forever()
 
-# Definimos teclado con botones
-keyboard = [
-    [KeyboardButton("📅 Hoy"), KeyboardButton("📊 Estado")],
-    [KeyboardButton("✅ Completar"), KeyboardButton("🔁 Repetir")],
-]
+# Iniciar el servidor dummy en hilo separado
+threading.Thread(target=run_dummy_server, daemon=True).start()
 
-markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
+# --- Código original del bot ---
+TOKEN = "TU_TOKEN_AQUI"
 
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = str(update.effective_user.id)
-    requests.get(f"{BACKEND_URL}/estado/{user_id}")  # Inicializa usuario en backend
-    await update.message.reply_text(
-        "👋 ¡Bienvenido al Protocolo R2!\nUsá los botones para navegar.",
-        reply_markup=markup
-    )
-
-
-# Funciones que responden a botones
-async def manejar_texto(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    texto = update.message.text
-
-    user_id = str(update.effective_user.id)
-
-    if texto == "📅 Hoy":
-        r = requests.get(f"{BACKEND_URL}/hoy/{user_id}")
-        if r.ok:
-            data = r.json()
-            await update.message.reply_text(f"{data['mensaje']}\n\n{data['contenido']}")
-        else:
-            await update.message.reply_text("Error al obtener el contenido de hoy.")
-
-    elif texto == "📊 Estado":
-        r = requests.get(f"{BACKEND_URL}/estado/{user_id}")
-        if r.ok:
-            data = r.json()
-            texto_estado = (
-                f"📅 Día actual: {data['Día actual']}\n"
-                f"🌀 Fase: {data['Fase']}\n"
-                f"✅ Días completados: {data['Días completados']}\n"
-                f"🔁 Repeticiones: {data['Repeticiones']}\n"
-                f"🏅 Logros: {', '.join(data['Logros']) if data['Logros'] else 'Aún sin medallas'}"
-            )
-            await update.message.reply_text(texto_estado)
-        else:
-            await update.message.reply_text("Error al obtener tu estado.")
-
-    elif texto == "✅ Completar":
-        r = requests.post(f"{BACKEND_URL}/completar/{user_id}")
-        if r.ok:
-            await update.message.reply_text(r.json()["mensaje"])
-        else:
-            await update.message.reply_text("⚠️ Ya marcaste este día o hubo un error.")
-
-    elif texto == "🔁 Repetir":
-        r = requests.post(f"{BACKEND_URL}/repetir/{user_id}")
-        if r.ok:
-            await update.message.reply_text("🔁 Día repetido. Mañana recibirás el mismo contenido.")
-        else:
-            await update.message.reply_text("Error al repetir el día.")
-
-    else:
-        await update.message.reply_text("No entiendo ese comando, probá usar los botones.")
-
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("¡Hola, Jefe! Bot listo para usar.")
 
 def main():
-    app = ApplicationBuilder().token(TOKEN).build()
+    updater = Updater(TOKEN)
+    dp = updater.dispatcher
 
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, manejar_texto))
+    dp.add_handler(CommandHandler("start", start))
 
-    app.run_polling()
+    # Inicia el bot
+    updater.start_polling()
+    updater.idle()
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
