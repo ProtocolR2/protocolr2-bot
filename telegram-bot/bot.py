@@ -18,7 +18,7 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # --- Código original del bot ---
-TOKEN = "TU_TOKEN_AQUI"
+TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"
 
 def start(update: Update, context: CallbackContext):
     update.message.reply_text("¡Hola, Jefe! Bot listo para usar.")
