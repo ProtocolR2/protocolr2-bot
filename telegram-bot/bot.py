@@ -2,13 +2,8 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ChatMemberHandler
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import time
-import logging
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Dummy HTTP server para mantener vivo Render
+# ================= Dummy server para Render ===================
 class DummyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -21,18 +16,19 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-TOKEN = "TU_TOKEN_AQUI"
+# ================= Bot de Telegram ============================
+TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"  # No lo compartas públicamente
 
 def send_menu(update: Update, context: CallbackContext):
     user_first_name = update.effective_user.first_name or "Querid@ Amig@"
-    dia_actual = 5
+    dia_actual = 5  # Podés cambiarlo luego dinámicamente
 
     welcome_text = (
-        f"¡Hola, {user_first_name}! Bienvenid@ al Protocolo R2.\n\n"
-        "Este es un camino de renovación y energía.\n"
-        "Cada día es un paso hacia una versión más saludable y poderosa de ti mism@.\n"
-        "¡Vamos con todo, que la transformación comienza ahora!\n\n"
-        "¿Qué querés hacer hoy?"
+        f"¡Hola, {user_first_name}! Bienvenid@ al *Protocolo R2*.\n\n"
+        "✨ Este es un camino de renovación y energía.\n"
+        "Cada día es un paso hacia una versión más saludable y poderosa de vos mism@.\n"
+        "💪 ¡Vamos con todo, que la transformación comienza ahora!\n\n"
+        "*¿Qué querés hacer hoy?*"
     )
 
     keyboard = [
@@ -49,34 +45,44 @@ def send_menu(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.message:
-        update.message.reply_text(welcome_text, reply_markup=reply_markup)
+        update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode="Markdown")
     elif update.callback_query:
-        update.callback_query.message.edit_text(welcome_text, reply_markup=reply_markup)
+        update.callback_query.edit_message_text(welcome_text, reply_markup=reply_markup, parse_mode="Markdown")
 
-def start(update: Update, context: CallbackContext):
-    send_menu(update, context)
+def handle_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
 
-def chat_member_update(update: Update, context: CallbackContext):
-    chat_member = update.chat_member
-    if chat_member.new_chat_member.status == 'member':
+    respuestas = {
+        "protocolo": "El Protocolo R2 es un programa de desintoxicación integral...",
+        "receta_hoy": "Tu receta de hoy: 🥒 Ensalada de pepino con limón y perejil.",
+        "recetario": "Aquí va el recetario completo. Próximamente disponible.",
+        "agenda": "Tu agenda personal aún no está configurada.",
+        "lista_compras": "Lista de compras para esta semana: 🍅🥬🍋...",
+        "tips": "Tip de hoy: Tomá mucha agua durante la fase de desintoxicación.",
+        "logros": "Todavía no registraste logros. ¡Empecemos!",
+        "recomendar": "Compartí este programa con tus amig@s 💌",
+        "ajustes": "Ajustes: próximamente disponible."
+    }
+
+    respuesta = respuestas.get(query.data, "Opción no disponible.")
+    query.edit_message_text(respuesta)
+
+def greet_new_user(update: Update, context: CallbackContext):
+    result = update.chat_member
+    if result.new_chat_member.status == "member":
         send_menu(update, context)
 
 def main():
-    while True:
-        try:
-            updater = Updater(TOKEN)
-            dp = updater.dispatcher
+    updater = Updater(TOKEN)
+    dispatcher = updater.dispatcher
 
-            dp.add_handler(CommandHandler("start", start))
-            dp.add_handler(ChatMemberHandler(chat_member_update, ChatMemberHandler.CHAT_MEMBER))
-            dp.add_handler(CallbackQueryHandler(callback_handler))  # Define callback_handler si tienes
+    dispatcher.add_handler(CommandHandler("start", send_menu))
+    dispatcher.add_handler(CallbackQueryHandler(handle_callback))
+    dispatcher.add_handler(ChatMemberHandler(greet_new_user, ChatMemberHandler.CHAT_MEMBER))
 
-            updater.start_polling()
-            logger.info("Bot iniciado correctamente.")
-            updater.idle()
-        except Exception as e:
-            logger.error(f"Error en el bot: {e}")
-            time.sleep(5)  # Espera 5 segundos antes de intentar reconectar
+    updater.start_polling()
+    updater.idle()
 
 if __name__ == '__main__':
     main()
