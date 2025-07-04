@@ -16,11 +16,11 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"  # Reemplaza si cambia
+TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"  # Tu token
 
 def send_menu(update: Update, context: CallbackContext):
     user_first_name = update.effective_user.first_name or "Querid@ Amig@"
-    dia_actual = 5  # Puedes sacar de DB luego
+    dia_actual = 5  # Aquí luego conectarás con DB para traer el día real
 
     welcome_text = (
         f"¡Hola, {user_first_name}! Bienvenid@ al Protocolo R2.\n\n"
@@ -44,3 +44,50 @@ def send_menu(update: Update, context: CallbackContext):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.message:
+        update.message.reply_text(welcome_text, reply_markup=reply_markup)
+    elif update.callback_query:
+        update.callback_query.message.edit_text(welcome_text, reply_markup=reply_markup)
+
+def start(update: Update, context: CallbackContext):
+    send_menu(update, context)
+
+def handle_button(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+
+    data = query.data
+    # Respuestas de ejemplo para cada botón (luego los conectamos con lógica real)
+    responses = {
+        'protocolo': "El Protocolo R2 es un camino de desintoxicación y renovación para tu cuerpo y mente.",
+        'receta_hoy': "Aquí está tu receta para hoy... (a implementar).",
+        'recetario': "Accede al recetario completo en https://tusitio.com/recetario",
+        'agenda': "Tu agenda personal está en desarrollo.",
+        'lista_compras': "Tu lista de compras aparecerá pronto.",
+        'tips': "Tip del día: Bebe mucha agua y mantente activo.",
+        'logros': "¡Vas genial! Aquí están tus logros... (a implementar).",
+        'recomendar': "Comparte este programa con tus amigos y familiares.",
+        'ajustes': "Configura tus preferencias aquí (próximamente).",
+    }
+
+    text = responses.get(data, "Funcionalidad en desarrollo.")
+    query.edit_message_text(text=text)
+
+def welcome_new_member(update: Update, context: CallbackContext):
+    # Cuando un usuario se une, enviamos el menú
+    chat_member = update.chat_member
+    if chat_member.new_chat_member.status == 'member':
+        send_menu(update, context)
+
+def main():
+    updater = Updater(TOKEN)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CallbackQueryHandler(handle_button))
+    dp.add_handler(ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER))
+
+    updater.start_polling()
+    updater.idle()
+
+if __name__ == '__main__':
+    main()
