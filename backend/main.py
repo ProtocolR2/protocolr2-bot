@@ -15,6 +15,7 @@ def get_estado():
         "Repeticiones": 0,
         "Logros": []
     }
+
 @app.get("/ping")
 def ping():
     return "OK"
