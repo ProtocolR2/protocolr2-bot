@@ -17,7 +17,10 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # ================= Bot de Telegram ============================
-TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"  # No lo compartas públicamente
+import os
+
+TOKEN = os.getenv('TELEGRAM_TOKEN')
+
 
 def send_menu(update: Update, context: CallbackContext):
     user_first_name = update.effective_user.first_name or "Querid@ Amig@"
