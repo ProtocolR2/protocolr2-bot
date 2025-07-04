@@ -2,8 +2,13 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ChatMemberHandler
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+import time
+import logging
 
-# Servidor dummy para que Render detecte puerto abierto
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Dummy HTTP server para mantener vivo Render
 class DummyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -16,11 +21,11 @@ def run_dummy_server():
 
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
-TOKEN = "8008692642:AAFkxddcVfOlp8YHKqpcgiCkEVplkup5qEs"  # Tu token
+TOKEN = "TU_TOKEN_AQUI"
 
 def send_menu(update: Update, context: CallbackContext):
     user_first_name = update.effective_user.first_name or "Querid@ Amig@"
-    dia_actual = 5  # Aquí luego conectarás con DB para traer el día real
+    dia_actual = 5
 
     welcome_text = (
         f"¡Hola, {user_first_name}! Bienvenid@ al Protocolo R2.\n\n"
@@ -51,43 +56,27 @@ def send_menu(update: Update, context: CallbackContext):
 def start(update: Update, context: CallbackContext):
     send_menu(update, context)
 
-def handle_button(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-
-    data = query.data
-    # Respuestas de ejemplo para cada botón (luego los conectamos con lógica real)
-    responses = {
-        'protocolo': "El Protocolo R2 es un camino de desintoxicación y renovación para tu cuerpo y mente.",
-        'receta_hoy': "Aquí está tu receta para hoy... (a implementar).",
-        'recetario': "Accede al recetario completo en https://tusitio.com/recetario",
-        'agenda': "Tu agenda personal está en desarrollo.",
-        'lista_compras': "Tu lista de compras aparecerá pronto.",
-        'tips': "Tip del día: Bebe mucha agua y mantente activo.",
-        'logros': "¡Vas genial! Aquí están tus logros... (a implementar).",
-        'recomendar': "Comparte este programa con tus amigos y familiares.",
-        'ajustes': "Configura tus preferencias aquí (próximamente).",
-    }
-
-    text = responses.get(data, "Funcionalidad en desarrollo.")
-    query.edit_message_text(text=text)
-
-def welcome_new_member(update: Update, context: CallbackContext):
-    # Cuando un usuario se une, enviamos el menú
+def chat_member_update(update: Update, context: CallbackContext):
     chat_member = update.chat_member
     if chat_member.new_chat_member.status == 'member':
         send_menu(update, context)
 
 def main():
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
+    while True:
+        try:
+            updater = Updater(TOKEN)
+            dp = updater.dispatcher
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(handle_button))
-    dp.add_handler(ChatMemberHandler(welcome_new_member, ChatMemberHandler.CHAT_MEMBER))
+            dp.add_handler(CommandHandler("start", start))
+            dp.add_handler(ChatMemberHandler(chat_member_update, ChatMemberHandler.CHAT_MEMBER))
+            dp.add_handler(CallbackQueryHandler(callback_handler))  # Define callback_handler si tienes
 
-    updater.start_polling()
-    updater.idle()
+            updater.start_polling()
+            logger.info("Bot iniciado correctamente.")
+            updater.idle()
+        except Exception as e:
+            logger.error(f"Error en el bot: {e}")
+            time.sleep(5)  # Espera 5 segundos antes de intentar reconectar
 
 if __name__ == '__main__':
     main()
