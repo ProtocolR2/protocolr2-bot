@@ -76,13 +76,22 @@ def greet_new_user(update: Update, context: CallbackContext):
     if result.new_chat_member.status == "member":
         send_menu(update, context)
 
-def main():
-    updater = Updater(TOKEN)
-    dispatcher = updater.dispatcher
+ddef main():
+    if not TOKEN:
+        print("🚨 ERROR: TELEGRAM_TOKEN no está definido")
+    else:
+        print(f"✅ TOKEN cargado: {TOKEN[:10]}...")
 
-    dispatcher.add_handler(CommandHandler("start", send_menu))
-    dispatcher.add_handler(CallbackQueryHandler(handle_callback))
-    dispatcher.add_handler(ChatMemberHandler(greet_new_user, ChatMemberHandler.CHAT_MEMBER))
+        updater = Updater(TOKEN)
+        dispatcher = updater.dispatcher
+
+        dispatcher.add_handler(CommandHandler("start", send_menu))
+        dispatcher.add_handler(CallbackQueryHandler(handle_callback))
+        dispatcher.add_handler(ChatMemberHandler(greet_new_user, ChatMemberHandler.CHAT_MEMBER))
+
+        print("🤖 Iniciando bot con polling...")
+        updater.start_polling()
+        updater.idle()
 
     updater.start_polling()
     updater.idle()
