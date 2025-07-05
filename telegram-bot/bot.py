@@ -1,7 +1,11 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext, ChatMemberHandler
+import os
 import threading
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    Updater, CommandHandler, CallbackQueryHandler,
+    CallbackContext, ChatMemberHandler
+)
 
 # ================= Dummy server para Render ===================
 class DummyHandler(BaseHTTPRequestHandler):
@@ -17,10 +21,7 @@ def run_dummy_server():
 threading.Thread(target=run_dummy_server, daemon=True).start()
 
 # ================= Bot de Telegram ============================
-import os
-
 TOKEN = os.getenv('TELEGRAM_TOKEN')
-
 
 def send_menu(update: Update, context: CallbackContext):
     user_first_name = update.effective_user.first_name or "Querid@ Amig@"
@@ -76,7 +77,7 @@ def greet_new_user(update: Update, context: CallbackContext):
     if result.new_chat_member.status == "member":
         send_menu(update, context)
 
-ddef main():
+def main():
     if not TOKEN:
         print("🚨 ERROR: TELEGRAM_TOKEN no está definido")
     else:
@@ -92,9 +93,6 @@ ddef main():
         print("🤖 Iniciando bot con polling...")
         updater.start_polling()
         updater.idle()
-
-    updater.start_polling()
-    updater.idle()
 
 if __name__ == '__main__':
     main()
